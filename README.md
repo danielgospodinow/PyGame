@@ -1,4 +1,4 @@
-# MotiSlide
+# PySnake
 
 ## Basic info:
 
