@@ -8,10 +8,10 @@ black = [0, 0, 0]
 green = [0, 155, 0]
 red = [255, 0, 0]
 
-snake_head_image = pygame.image.load("snakehead01.png")
-apple_image = pygame.image.load("apple_sprite_01.png")
-snake_tail_image = pygame.image.load("snake_tail_01.png")
-game_icon = pygame.image.load("danchoIcon.jpg")
+snake_head_image = pygame.image.load("sprites/snakehead01.png")
+apple_image = pygame.image.load("sprites/apple_sprite_01.png")
+snake_tail_image = pygame.image.load("sprites/snake_tail_01.png")
+game_icon = pygame.image.load("sprites/danchoIcon.jpg")
 
 pygame.display.set_icon(game_icon)
 
@@ -31,8 +31,11 @@ small_font = pygame.font.SysFont("comicsansms", 25)
 normal_font = pygame.font.SysFont("comicsansms", 50)
 large_font = pygame.font.SysFont("comicsansms", 100)
 
+snake_angle = 0
+
 
 def snake(snake_size, snake_list):
+    head = None
 
     if direction == "up":
         head = pygame.transform.rotate(snake_head_image, 0)
@@ -51,6 +54,7 @@ def snake(snake_size, snake_list):
 
 
 def text_objects(text, color, font_size):
+    text_surface = None
     if font_size == "small":
         text_surface = small_font.render(text, True, color)
     elif font_size == "normal":
@@ -69,6 +73,33 @@ def message_to_screen(message, color, y_dispose=0, font_size="small"):
 def score(score):
     score_text = small_font.render("Score: " + str(score), True, black)
     gameDisplay.blit(score_text, [0, 0])
+
+
+def handle_snake(snake_list, snake_tail_pos, snake_turn_points):
+
+    global snake_angle
+    first_turn = []
+
+    if len(snake_turn_points) > 0:
+        first_turn = [snake_turn_points[0][0], snake_turn_points[0][1], snake_turn_points[0][2]]
+
+    if len(snake_list) > 1:
+
+        if len(first_turn) > 0 and snake_tail_pos[0] == first_turn[0] and snake_tail_pos[1] == first_turn[1]:
+
+            if first_turn[2] == "up":
+                snake_angle = 0
+            elif first_turn[2] == "down":
+                snake_angle = 180
+            elif first_turn[2] == "right":
+                snake_angle = 270
+            elif first_turn[2] == "left":
+                snake_angle = 90
+
+            snake_turn_points.pop(0)
+
+        tail = pygame.transform.rotate(snake_tail_image, snake_angle)
+        gameDisplay.blit(tail, (snake_tail_pos[0], snake_tail_pos[1]))
 
 
 def game_intro():
@@ -107,8 +138,9 @@ def game_loop():
     rand_big_apple_y = round(random.randrange(0, display_height - snake_size) / 10.0) * 10.0
     big_apple_size = 20
     snake_list = []
-    snake_lenght = 1
+    snake_lenght = 2
     global direction
+    global snake_angle
     snake_turn_points = []
     game_score = 0
 
@@ -125,6 +157,8 @@ def game_loop():
                         game_over = False
                         game_exit = True
                     if event.key == pygame.K_c:
+                        direction = "up"
+                        snake_angle = 0
                         game_loop()
 
         for event in pygame.event.get():  # Tozi for loop uprawlqwa eventite
@@ -134,25 +168,25 @@ def game_loop():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_a:
                     direction = "left"
-                    snake_turn_point = [[lead_x, lead_y], "left"]
+                    snake_turn_point = [lead_x, lead_y, "left"]
                     snake_turn_points.append(snake_turn_point)
                     lead_x_change = -snake_size
                     lead_y_change = 0
                 if event.key == pygame.K_d:
                     direction = "right"
-                    snake_turn_point = [[lead_x, lead_y], "right"]
+                    snake_turn_point = [lead_x, lead_y, "right"]
                     snake_turn_points.append(snake_turn_point)
                     lead_x_change = snake_size
                     lead_y_change = 0
                 if event.key == pygame.K_w:
                     direction = "up"
-                    snake_turn_point = [[lead_x, lead_y], "up"]
+                    snake_turn_point = [lead_x, lead_y, "up"]
                     snake_turn_points.append(snake_turn_point)
                     lead_y_change = -snake_size
                     lead_x_change = 0
                 if event.key == pygame.K_s:
                     direction = "down"
-                    snake_turn_point = [[lead_x, lead_y], "down"]
+                    snake_turn_point = [lead_x, lead_y, "down"]
                     snake_turn_points.append(snake_turn_point)
                     lead_y_change = snake_size
                     lead_x_change = 0
@@ -167,38 +201,22 @@ def game_loop():
         snake_head.append(lead_x)
         snake_head.append(lead_y)
         snake_list.append(snake_head)
+
         if len(snake_list) > snake_lenght:
             del snake_list[0]
 
-        for each_segment in snake_list[:-1]:
+        for each_segment in snake_list[:-1]:  # Prowerka dali nqma pregrizwane
             if each_segment[0] == snake_head[0] and each_segment[1] == snake_head[1]:
                 game_over = True
 
         gameDisplay.fill(white)  # Slaga celiq background-color da e white
         # pygame.draw.rect(gameDisplay, red, [rand_big_apple_x, rand_big_apple_y, big_apple_size, big_apple_size])
         gameDisplay.blit(apple_image, (rand_big_apple_x, rand_big_apple_y))
+
         snake(snake_size, snake_list)
         # gameDisplay.fill(red, rect=[200, 200, 50, 50])  # Nachin 2 za chertane na prawoygylnik
-        '''if len(snake_turn_points) > 1 and snake_turn_points[-1][0][0] == snake_list[0][0]:
-            print("tail should now rotate!")
-            print(snake_turn_points[0][0][0], " ", snake_turn_points[0][0][1])
-            if snake_turn_points[-1][1] == "up":
-                print("up")
-                pygame.transform.rotate(snake_tail_image, 0)
-            if snake_turn_points[-1][1] == "down":
-                print("down")
-                pygame.transform.rotate(snake_tail_image, 180)
-            if snake_turn_points[-1][1] == "right":
-                print("right")
-                pygame.transform.rotate(snake_tail_image, 270)
-            if snake_turn_points[-1][1] == "left":
-                print("left")
-                pygame.transform.rotate(snake_tail_image, 90)
-            snake_turn_points.remove(snake_turn_points[-1])'''
-        if len(snake_list) > 1:
-            gameDisplay.blit(snake_tail_image, (snake_list[0][0], snake_list[0][1]))
+
         score(game_score)
-        pygame.display.update()  # Risuwa wsichko koeto wsichko e definirano nad tozi update() metod
 
         if (lead_x > rand_big_apple_x and lead_x < rand_big_apple_x + big_apple_size) or (lead_x + snake_size > rand_big_apple_x and lead_x + snake_size < rand_big_apple_x + big_apple_size):
             if (lead_y > rand_big_apple_y and lead_y < rand_big_apple_y + big_apple_size) or (lead_y + snake_size > rand_big_apple_y and lead_y + snake_size < rand_big_apple_y + big_apple_size):
@@ -207,6 +225,10 @@ def game_loop():
                 rand_big_apple_x = random.randrange(0, display_width - big_apple_size)
                 rand_big_apple_y = random.randrange(0, display_height - big_apple_size)
 
+        snake_tail_pos = [snake_list[0][0], snake_list[0][1]]
+        handle_snake(snake_list, snake_tail_pos, snake_turn_points)
+
+        pygame.display.update()  # Risuwa wsichko koeto e definirano nad tozi update() metod
         python_clock.tick(fps)  # Prawim igrata da wyrwi s 10fps- po princip 30 fps e nai polzwanoto fps
 
     pygame.quit()
@@ -214,4 +236,3 @@ def game_loop():
 
 game_intro()
 game_loop()
-
